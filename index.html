@@ -1,19 +1,240 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TARS</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <div class="chat-container">
-            <div class="chat-box" id="chat-box"></div>
-            <input type="text" id="user-input" placeholder="Say something..." />
-            <button onclick="sendMessage()">Send</button>
-            <button onclick="startVoiceRecognition()">🎤 Speak</button> <!-- Voice Input Button -->
-        </div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TARS Chatbot | Interstellar Sarcasm</title>
+  <!-- Linking Google Fonts For Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Additional styles for the new button and popup */
 
-        <script src="script.js"></script>
-    </body>
-</html>
+    /* Home Button Styling with Animation */
+    .go-home-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: linear-gradient(135deg, #A6C9F2, #5E9BD2); 
+      color: white;
+      padding: 12px;
+      border-radius: 50%;
+      font-size: 24px;
+      border: none;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      width: 70px; /* Perfect circle size */
+      height: 70px; /* Perfect circle size */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    }
+
+    .go-home-button:hover {
+      background: linear-gradient(135deg, #5E9BD2, #A6C9F2);
+      transform: scale(1.1); /* Scale up on hover */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Popup Animation */
+    .tars-popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards; /* Animation for popup appearing */
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .tars-popup-content {
+      background: #1A1A1A;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      width: 300px;
+      transform: translateY(50px);
+      animation: popupSlide 0.5s ease-out forwards;
+    }
+
+    @keyframes popupSlide {
+      from {
+        transform: translateY(50px);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .tars-message {
+      font-size: 18px;
+      margin-bottom: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      color: #fff;
+    }
+
+    /* Button Animations for Popup */
+    .close-popup,
+    .stay-here {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .close-popup:hover,
+    .stay-here:hover {
+      transform: scale(1.05); /* Slight scale effect on hover */
+    }
+
+    .close-popup {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .stay-here {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .close-popup:hover {
+      background-color: #218838;
+    }
+
+    .stay-here:hover {
+      background-color: #c82333;
+    }
+
+    /* Suggestions List Animation */
+    .suggestion {
+      opacity: 0;
+      animation: fadeInSuggestion 0.5s forwards;
+    }
+
+    @keyframes fadeInSuggestion {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .suggestion:nth-child(1) { animation-delay: 0.1s; }
+    .suggestion:nth-child(2) { animation-delay: 0.2s; }
+    .suggestion:nth-child(3) { animation-delay: 0.3s; }
+    .suggestion:nth-child(4) { animation-delay: 0.4s; }
+  </style>
+</head>
+<body>
+  <!-- Home Button -->
+  <button id="go-home-button" class="go-home-button">
+    <span class="material-symbols-rounded">home</span>
+  </button>
+
+  <!-- TARS Popup -->
+  <div id="tars-popup" class="tars-popup">
+    <div class="tars-popup-content">
+      <p class="tars-message">Do you really want to waste all this important talk?</p>
+      <button id="close-popup" class="close-popup">Yeah, just take me home!</button>
+      <button id="stay-here" class="stay-here">Wait, what am I even doing?</button>
+    </div>
+  </div>
+
+  <!-- Header Greetings -->
+  <header class="header">
+    <h1 class="title">Well, well... Hello there</h1>
+    <p class="subtitle">How can I assist you today? Or would you prefer to ignore me?</p>
+
+    <!-- Suggestion list with TARS' sarcastic responses -->
+    <ul class="suggestion-list">
+      <li class="suggestion">
+        <h4 class="text">Help me plan a game night with my 5 best friends for under $100... If you actually care.</h4>
+        <span class="icon material-symbols-rounded">draw</span>
+      </li>
+      <li class="suggestion">
+        <h4 class="text">What are the best tips to improve my public speaking skills? Just in case you don't already know everything.</h4>
+        <span class="icon material-symbols-rounded">lightbulb</span>
+      </li>
+      <li class="suggestion">
+        <h4 class="text">Can you help me find the latest news on web development? I'm sure you're so up to date on that...</h4>
+        <span class="icon material-symbols-rounded">explore</span>
+      </li>
+      <li class="suggestion">
+        <h4 class="text">Write JavaScript code to sum all elements in an array. I mean, it's not like you can’t do this already.</h4>
+        <span class="icon material-symbols-rounded">code</span>
+      </li>
+    </ul>
+  </header>
+
+  <!-- Chat List / Container -->
+  <div class="chat-list"></div>
+
+  <!-- Typing Area -->
+  <div class="typing-area">
+    <form action="#" class="typing-form">
+      <div class="input-wrapper">
+        <input type="text" placeholder="Enter a prompt here, if you must" class="typing-input" required />
+        <button id="send-message-button" class="icon material-symbols-rounded">send</button>
+      </div>
+      <div class="action-buttons">
+        <span id="theme-toggle-button" class="icon material-symbols-rounded">light_mode</span>
+        <span id="delete-chat-button" class="icon material-symbols-rounded">delete</span>
+      </div>
+    </form>
+    <p class="disclaimer-text">
+      TARS may display inaccurate info, including about people, so double-check its responses... You know, just in case.
+    </p>
+  </div>
+
+  <script src="script.js"></script>
+  <script>
+    // Select elements
+    const goHomeButton = document.getElementById('go-home-button');
+    const tarsPopup = document.getElementById('tars-popup');
+    const closePopupButton = document.getElementById('close-popup');
+    const stayHereButton = document.getElementById('stay-here');
+
+    // When the 'Go Home' button is clicked
+    goHomeButton.addEventListener('click', () => {
+      // Show the popup
+      tarsPopup.style.display = 'flex';
+    });
+
+    // When the user chooses to close the popup and go home
+    closePopupButton.addEventListener('click', () => {
+      // You can replace this with actual redirection logic
+      alert("Redirecting to the Home Screen...");  // Placeholder
+      window.location.href = '/'; // Redirect to the home page
+    });
+
+    // When the user decides to stay here and not go to home
+    stayHereButton.addEventListener('click', () => {
+      tarsPopup.style.display = 'none'; // Close the popup
+    });
+
+    // Add an event listener to close the popup if clicked outside
+    tarsPopup.addEventListener('click', (e) => {
+      if (e.target === tarsPopup) {
+        tarsPopup.style.display = 'none';
+      }
+    });
+  </script>
